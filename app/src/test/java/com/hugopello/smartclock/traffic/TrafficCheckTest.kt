@@ -57,6 +57,17 @@ class TrafficCheckTest {
     }
 
     @Test
+    fun `travel time in seconds is rounded up to whole minutes`() = runTest {
+        // 44 min 55 s → 45 min → 15 min earlier, exactly on the minute.
+        val traffic = FakeTrafficSource(TrafficResult.Success(Duration.ofSeconds(44 * 60 + 55)))
+
+        check("2026-11-12T06:15", traffic).run(isLastAttempt = false)
+
+        assertEquals(Duration.ofMinutes(45), repository.adjustment?.todayTravel)
+        assertEquals(at("2026-11-12T06:45"), scheduler.ringAt)
+    }
+
+    @Test
     fun `asks for traffic at the usual departure time`() = runTest {
         val traffic = success(30)
 
