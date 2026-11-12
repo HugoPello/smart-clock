@@ -2,6 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+}
+
+// Room writes one JSON per database version here (committed): needed to write and test migrations.
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {

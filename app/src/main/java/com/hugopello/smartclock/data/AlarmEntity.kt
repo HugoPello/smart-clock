@@ -1,5 +1,6 @@
 package com.hugopello.smartclock.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.hugopello.smartclock.domain.AlarmSettings
@@ -17,6 +18,8 @@ data class AlarmEntity(
     val preparationMinutes: Int,
     val usualTravelMinutes: Int,
     val destination: String,
+    // Must match MIGRATION_1_2 exactly: Room checks the real table against this class on open.
+    @ColumnInfo(defaultValue = "0") val enabled: Boolean,
 ) {
     companion object {
         const val SINGLE_ID = 1
@@ -28,6 +31,7 @@ fun AlarmEntity.toDomain() = AlarmSettings(
     preparation = Duration.ofMinutes(preparationMinutes.toLong()),
     usualTravel = Duration.ofMinutes(usualTravelMinutes.toLong()),
     destination = destination,
+    enabled = enabled,
 )
 
 fun AlarmSettings.toEntity() = AlarmEntity(
@@ -35,4 +39,5 @@ fun AlarmSettings.toEntity() = AlarmEntity(
     preparationMinutes = preparation.toMinutes().toInt(),
     usualTravelMinutes = usualTravel.toMinutes().toInt(),
     destination = destination,
+    enabled = enabled,
 )

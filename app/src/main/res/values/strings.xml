@@ -8,4 +8,19 @@
     <string name="destination">Destination</string>
     <string name="save">Save</string>
     <string name="saved">Saved</string>
+    <string name="alarm_enabled">Alarm on</string>
+
+    <string name="schedule_next">Next alarm: %1$s</string>
+    <string name="schedule_off">Alarm is off</string>
+    <string name="schedule_missing_permission">Not scheduled: exact alarms are not allowed</string>
+
+    <string name="permission_exact_alarm">Allow exact alarms so the alarm rings on time.</string>
+    <string name="permission_notifications">Allow notifications: the alarm sound is a notification.</string>
+    <string name="permission_full_screen">Allow full-screen alerts to show the alarm over the lock screen.</string>
+    <string name="permission_grant">Allow</string>
+
+    <string name="channel_alarm">Alarm</string>
+    <string name="alarm_ringing_title">Time to wake up</string>
+    <string name="alarm_ringing_text">Tap to open the alarm</string>
+    <string name="dismiss">Dismiss</string>
 </resources>

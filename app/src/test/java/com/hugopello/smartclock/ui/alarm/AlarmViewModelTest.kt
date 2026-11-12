@@ -1,7 +1,10 @@
 package com.hugopello.smartclock.ui.alarm
 
+import com.hugopello.smartclock.FakeAlarmRepository
+import com.hugopello.smartclock.FakeAlarmScheduler
 import com.hugopello.smartclock.MainDispatcherRule
-import com.hugopello.smartclock.data.AlarmRepository
+import com.hugopello.smartclock.alarm.AlarmSync
+import com.hugopello.smartclock.alarm.SyncResult
 import com.hugopello.smartclock.domain.AlarmSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -11,13 +14,6 @@ import org.junit.Rule
 import org.junit.Test
 import java.time.Duration
 import java.time.LocalTime
-
-private class FakeAlarmRepository(var stored: AlarmSettings? = null) : AlarmRepository {
-    override suspend fun get() = stored
-    override suspend fun save(settings: AlarmSettings) {
-        stored = settings
-    }
-}
 
 class AlarmViewModelTest {
 
@@ -31,9 +27,13 @@ class AlarmViewModelTest {
         destination = "Office",
     )
 
+    private val scheduler = FakeAlarmScheduler()
+
+    private fun viewModel(repo: FakeAlarmRepository) = AlarmViewModel(repo, AlarmSync(repo, scheduler))
+
     @Test
     fun `loads saved settings on start`() {
-        val vm = AlarmViewModel(FakeAlarmRepository(saved))
+        val vm = viewModel(FakeAlarmRepository(saved))
 
         val state = vm.uiState.value
         assertFalse(state.isLoading)
@@ -43,14 +43,14 @@ class AlarmViewModelTest {
 
     @Test
     fun `uses defaults when nothing saved`() {
-        val vm = AlarmViewModel(FakeAlarmRepository())
+        val vm = viewModel(FakeAlarmRepository())
 
         assertEquals(AlarmSettings.DEFAULT, vm.uiState.value.settings)
     }
 
     @Test
     fun `editing updates wake up time and marks unsaved`() {
-        val vm = AlarmViewModel(FakeAlarmRepository(saved))
+        val vm = viewModel(FakeAlarmRepository(saved))
 
         vm.onPreparationChange(15)
 
@@ -60,7 +60,7 @@ class AlarmViewModelTest {
 
     @Test
     fun `minutes are clamped to valid range`() {
-        val vm = AlarmViewModel(FakeAlarmRepository(saved))
+        val vm = viewModel(FakeAlarmRepository(saved))
 
         vm.onPreparationChange(-1000)
         vm.onUsualTravelChange(-1000)
@@ -72,7 +72,7 @@ class AlarmViewModelTest {
     @Test
     fun `save persists trimmed settings and clears unsaved flag`() {
         val repo = FakeAlarmRepository()
-        val vm = AlarmViewModel(repo)
+        val vm = viewModel(repo)
 
         vm.onDestinationChange("  Office  ")
         vm.onArrivalChange(LocalTime.of(10, 0))
@@ -86,12 +86,48 @@ class AlarmViewModelTest {
     @Test
     fun `cannot save without destination`() {
         val repo = FakeAlarmRepository()
-        val vm = AlarmViewModel(repo)
+        val vm = viewModel(repo)
 
         vm.onDestinationChange("   ")
         vm.save()
 
         assertFalse(vm.uiState.value.canSave)
         assertNull(repo.stored)
+    }
+
+    @Test
+    fun `saving an enabled alarm schedules it`() {
+        val repo = FakeAlarmRepository(saved)
+        val vm = viewModel(repo)
+
+        vm.onEnabledChange(true)
+        vm.save()
+
+        assertEquals(true, repo.stored?.enabled)
+        assertEquals(LocalTime.of(7, 25), scheduler.scheduledAt?.toLocalTime())
+        assertTrue(vm.uiState.value.schedule is SyncResult.Scheduled)
+    }
+
+    @Test
+    fun `switching the alarm off cancels it`() {
+        val repo = FakeAlarmRepository(saved.copy(enabled = true))
+        val vm = viewModel(repo)
+        vm.refreshSchedule()
+
+        vm.onEnabledChange(false)
+        vm.save()
+
+        assertNull(scheduler.scheduledAt)
+        assertEquals(SyncResult.Disabled, vm.uiState.value.schedule)
+    }
+
+    @Test
+    fun `refresh reports missing permission`() {
+        scheduler.allowed = false
+        val vm = viewModel(FakeAlarmRepository(saved.copy(enabled = true)))
+
+        vm.refreshSchedule()
+
+        assertEquals(SyncResult.MissingPermission, vm.uiState.value.schedule)
     }
 }

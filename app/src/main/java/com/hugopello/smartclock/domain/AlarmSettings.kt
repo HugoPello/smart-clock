@@ -3,12 +3,16 @@ package com.hugopello.smartclock.domain
 import java.time.Duration
 import java.time.LocalTime
 
-/** What the user configures. Domain model: no Room/Android annotations. */
+/**
+ * What the user configures. Domain model: no Room/Android annotations.
+ * @property enabled whether the alarm should actually be scheduled (off by default).
+ */
 data class AlarmSettings(
     val arrival: LocalTime,
     val preparation: Duration,
     val usualTravel: Duration,
     val destination: String,
+    val enabled: Boolean = false,
 ) {
     /** Alarm time with no traffic data (the "original" alarm). */
     val originalAlarm: LocalTime
