@@ -64,8 +64,14 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
 - [x] Google Routes client removed (needs a Google Cloud billing account)
 - [x] TomTom client: Geocoding (`search/2/geocode`) for both addresses + Routing (`calculateRoute`, traffic, `departAt`)
 - [x] Key renamed to `TOMTOM_API_KEY` in `local.properties`
-- [x] Unit tests with MockWebServer (62 total, passing locally; lint clean)
-- [ ] Real TomTom call verified on the emulator (needs the author's API key)
+- [x] Travel time rounded up to whole minutes (alarm lands on an exact minute)
+- [x] Traffic line hidden while editing; Save clears text field focus
+- [x] Unit tests with MockWebServer (64 total, passing locally; lint clean)
+- [x] Real TomTom call verified on the emulator with the author's key, checked by Claude via adb:
+  - Puerta del Sol → Ciudad Universitaria: ~15 min, check took ~2 s
+  - usual trip 15 min: change below threshold, alarm not moved
+  - usual trip 5 min: alarm moved 10 min earlier, rescheduled at the exact minute
+  - invented destination: "no traffic data" on the first attempt, original time kept
 - [ ] CI green and PR merged
 
 ## Phase 5 — Polish
