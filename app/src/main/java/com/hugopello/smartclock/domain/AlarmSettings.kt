@@ -6,6 +6,7 @@ import java.time.LocalTime
 /**
  * What the user configures. Domain model: no Room/Android annotations.
  * @property enabled whether the alarm should actually be scheduled (off by default).
+ * @property origin where the trip starts (an address, e.g. home). Traffic is checked from here to [destination].
  */
 data class AlarmSettings(
     val arrival: LocalTime,
@@ -13,6 +14,7 @@ data class AlarmSettings(
     val usualTravel: Duration,
     val destination: String,
     val enabled: Boolean = false,
+    val origin: String = "",
 ) {
     /** Alarm time with no traffic data (the "original" alarm). */
     val originalAlarm: LocalTime

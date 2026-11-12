@@ -10,6 +10,7 @@ import com.hugopello.smartclock.alarm.AlarmSync
 import com.hugopello.smartclock.alarm.SyncResult
 import com.hugopello.smartclock.data.AlarmRepository
 import com.hugopello.smartclock.domain.AlarmSettings
+import com.hugopello.smartclock.domain.TrafficAdjustment
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,9 +25,16 @@ data class AlarmUiState(
     val hasUnsavedChanges: Boolean = false,
     /** What is actually registered with the system (from the last [AlarmSync.sync]); `null` until known. */
     val schedule: SyncResult? = null,
+    /** Last traffic check result stored in the database. */
+    val adjustment: TrafficAdjustment? = null,
 ) {
     val wakeUpTime: LocalTime get() = settings.originalAlarm
-    val canSave: Boolean get() = !isLoading && hasUnsavedChanges && settings.destination.isNotBlank()
+    val canSave: Boolean
+        get() = !isLoading && hasUnsavedChanges && settings.origin.isNotBlank() && settings.destination.isNotBlank()
+
+    /** The traffic result that moved the next alarm; `null` if the next alarm hasn't been checked yet. */
+    val appliedTraffic: TrafficAdjustment?
+        get() = adjustment.takeIf { schedule is SyncResult.Scheduled && schedule.trafficCheckAt == null }
 }
 
 class AlarmViewModel(
@@ -55,6 +63,8 @@ class AlarmViewModel(
         it.copy(usualTravel = it.usualTravel.plusMinutesIn(deltaMinutes, TRAVEL_RANGE))
     }
 
+    fun onOriginChange(text: String) = edit { it.copy(origin = text) }
+
     fun onDestinationChange(text: String) = edit { it.copy(destination = text) }
 
     fun onEnabledChange(enabled: Boolean) = edit { it.copy(enabled = enabled) }
@@ -63,20 +73,24 @@ class AlarmViewModel(
         val state = _uiState.value
         if (!state.canSave) return
         viewModelScope.launch {
-            repository.save(state.settings.copy(destination = state.settings.destination.trim()))
+            repository.save(
+                state.settings.copy(origin = state.settings.origin.trim(), destination = state.settings.destination.trim()),
+            )
             val schedule = alarmSync.sync()
-            _uiState.update { it.copy(hasUnsavedChanges = false, schedule = schedule) }
+            _uiState.update {
+                it.copy(hasUnsavedChanges = false, schedule = schedule, adjustment = repository.getAdjustment())
+            }
         }
     }
 
     /**
      * Called when the screen comes back to the foreground: the user may have just granted
-     * the exact-alarm permission in Settings, so try to schedule again.
+     * the exact-alarm permission in Settings, or a traffic check may have run in the background.
      */
     fun refreshSchedule() {
         viewModelScope.launch {
             val schedule = alarmSync.sync()
-            _uiState.update { it.copy(schedule = schedule) }
+            _uiState.update { it.copy(schedule = schedule, adjustment = repository.getAdjustment()) }
         }
     }
 

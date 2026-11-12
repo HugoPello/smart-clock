@@ -5,13 +5,19 @@
     <string name="preparation">Getting ready</string>
     <string name="usual_travel">Usual trip</string>
     <string name="minutes">%1$d min</string>
-    <string name="destination">Destination</string>
+    <string name="origin">Starting point (address)</string>
+    <string name="destination">Destination (address)</string>
     <string name="save">Save</string>
     <string name="saved">Saved</string>
     <string name="alarm_enabled">Alarm on</string>
 
     <string name="schedule_next">Next alarm: %1$s</string>
     <string name="schedule_off">Alarm is off</string>
+    <string name="traffic_check_at">Traffic check at %1$s</string>
+    <string name="traffic_earlier">Traffic: %1$d min (usual %2$d). Alarm moved %3$d min earlier.</string>
+    <string name="traffic_later">Traffic: %1$d min (usual %2$d). Alarm moved %3$d min later.</string>
+    <string name="traffic_same">Traffic: %1$d min (usual %2$d). No change.</string>
+    <string name="traffic_unavailable">Traffic unavailable: usual time kept.</string>
     <string name="schedule_missing_permission">Not scheduled: exact alarms are not allowed</string>
 
     <string name="permission_exact_alarm">Allow exact alarms so the alarm rings on time.</string>
