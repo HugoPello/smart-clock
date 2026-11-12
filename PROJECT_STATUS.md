@@ -29,15 +29,22 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
 - [x] Compose screen to edit and show the alarm
 - [x] Unit tests: ViewModel (fake repository) + entity mapper (22 total, passing locally; lint clean)
 - [x] Verified on emulator (Pixel_10a): edit, rotate, save, force-stop and reopen keeps saved values; unsaved changes are discarded (reported by author)
-- [ ] PR merged
+- [x] PR merged (#4)
 
 ## Phase 3 — Real alarm
-- [ ] Schedule with `AlarmManager.setAlarmClock`
-- [ ] Exact-alarm permission flow
-- [ ] Reschedule on `BOOT_COMPLETED`
-- [ ] Ringing screen/notification
-- [ ] Verified on a device/emulator
-- [ ] PR merged
+- [x] Schedule with `AlarmManager.setAlarmClock` through a single `AlarmSync` entry point (+ pure `nextOccurrence`, DST-safe)
+- [x] On/off switch: Room v1 → v2 migration (`enabled` column), schema export enabled (`app/schemas/`)
+- [x] Exact-alarm permission flow, plus notification (Android 13+) and full-screen intent (Android 14+) checks
+- [x] Reschedule on `BOOT_COMPLETED`, app update, time/time zone change, permission granted and app start
+- [x] Ringing notification (alarm stream, insistent, 10 min timeout) + full-screen `RingingActivity` with Dismiss
+- [x] Unit tests: `nextOccurrence`, `AlarmSync`, ViewModel scheduling (36 total, passing locally; lint clean)
+- [x] Verified on emulator (Pixel_10a, API 37), checked by Claude via adb:
+  - phase 2 data survived the v1 → v2 migration, alarm starts off
+  - permission cards shown; "Allow" opens the exact-alarm settings; after granting, the alarm is registered as an alarm clock
+  - rang on time with the screen off: ringing screen shown, alarm-usage audio playing; Dismiss removed the notification and stopped the sound
+  - next day's alarm scheduled right after ringing; still scheduled after a reboot without opening the app
+- [ ] Not verified yet: secure lock screen (PIN), time zone change, Dismiss from the notification, heads-up while the phone is in use
+- [ ] CI green and PR merged
 
 ## Phase 4 — Traffic
 - [ ] API key in `local.properties` → `BuildConfig`
