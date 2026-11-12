@@ -57,7 +57,15 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
   - phase 3 data survived the v2 → v3 auto-migration
   - without an API key: the check ran, stored "no traffic data", alarm kept its original time, UI shows it
   - check alarm fired on time with the screen off in light Doze and the worker ran
-- [ ] Not verified yet: a real Routes API call (needs the author's API key), deep Doze (the emulator won't enter it with an alarm clock less than 1 h away)
+- [ ] Not verified: deep Doze (the emulator won't enter it with an alarm clock less than 1 h away)
+- [x] CI green and PR merged (#6)
+
+### Phase 4b — Switch traffic provider to TomTom
+- [x] Google Routes client removed (needs a Google Cloud billing account)
+- [x] TomTom client: Geocoding (`search/2/geocode`) for both addresses + Routing (`calculateRoute`, traffic, `departAt`)
+- [x] Key renamed to `TOMTOM_API_KEY` in `local.properties`
+- [x] Unit tests with MockWebServer (62 total, passing locally; lint clean)
+- [ ] Real TomTom call verified on the emulator (needs the author's API key)
 - [ ] CI green and PR merged
 
 ## Phase 5 — Polish
