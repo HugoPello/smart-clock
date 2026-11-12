@@ -1,5 +1,9 @@
 package com.hugopello.smartclock.ui.alarm
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,12 +15,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -24,37 +30,71 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hugopello.smartclock.R
+import com.hugopello.smartclock.alarm.SyncResult
+import com.hugopello.smartclock.domain.AlarmSettings
 import com.hugopello.smartclock.ui.theme.SmartclockTheme
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+private val NEXT_ALARM_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE HH:mm")
 private const val STEP_MINUTES = 5L
 
-/** Stateful entry point: gets the ViewModel and wires events. */
+/** Stateful entry point: gets the ViewModel, checks permissions and wires events. */
 @Composable
 fun AlarmRoute(
     modifier: Modifier = Modifier,
     viewModel: AlarmViewModel = viewModel(factory = AlarmViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Permissions change outside the app (in Settings), so re-check every time the screen comes back.
+    var permissions by remember { mutableStateOf(AlarmPermissions.check(context)) }
+    LifecycleResumeEffect(Unit) {
+        permissions = AlarmPermissions.check(context)
+        viewModel.refreshSchedule()
+        onPauseOrDispose { }
+    }
+
+    // First tap: system dialog. After that Android may refuse to show it again, so go to Settings.
+    var askedNotifications by rememberSaveable { mutableStateOf(false) }
+    val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        permissions = AlarmPermissions.check(context)
+    }
+
     AlarmScreen(
         state = state,
+        permissions = permissions,
         onArrivalChange = viewModel::onArrivalChange,
         onPreparationChange = viewModel::onPreparationChange,
         onUsualTravelChange = viewModel::onUsualTravelChange,
         onDestinationChange = viewModel::onDestinationChange,
+        onEnabledChange = viewModel::onEnabledChange,
         onSave = viewModel::save,
+        onAllowExactAlarm = { AlarmPermissions.exactAlarmSettings(context)?.let(context::startActivity) },
+        onAllowNotifications = {
+            if (!askedNotifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                askedNotifications = true
+                notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                context.startActivity(AlarmPermissions.notificationSettings(context))
+            }
+        },
+        onAllowFullScreen = { AlarmPermissions.fullScreenSettings(context)?.let(context::startActivity) },
         modifier = modifier,
     )
 }
@@ -63,11 +103,16 @@ fun AlarmRoute(
 @Composable
 fun AlarmScreen(
     state: AlarmUiState,
+    permissions: AlarmPermissions,
     onArrivalChange: (LocalTime) -> Unit,
     onPreparationChange: (Long) -> Unit,
     onUsualTravelChange: (Long) -> Unit,
     onDestinationChange: (String) -> Unit,
+    onEnabledChange: (Boolean) -> Unit,
     onSave: () -> Unit,
+    onAllowExactAlarm: () -> Unit,
+    onAllowNotifications: () -> Unit,
+    onAllowFullScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state.isLoading) {
@@ -91,7 +136,30 @@ fun AlarmScreen(
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.alarm_rings_at), style = MaterialTheme.typography.titleMedium)
                 Text(state.wakeUpTime.format(TIME_FORMAT), style = MaterialTheme.typography.displayLarge)
+                state.schedule?.let { ScheduleStatus(it) }
             }
+        }
+
+        // Only ask for permissions when the alarm is (or is about to be) on.
+        if (settings.enabled) {
+            if (!permissions.exactAlarm) {
+                PermissionCard(stringResource(R.string.permission_exact_alarm), onAllowExactAlarm)
+            }
+            if (!permissions.notifications) {
+                PermissionCard(stringResource(R.string.permission_notifications), onAllowNotifications)
+            }
+            if (!permissions.fullScreen) {
+                PermissionCard(stringResource(R.string.permission_full_screen), onAllowFullScreen)
+            }
+        }
+
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.alarm_enabled),
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Switch(checked = settings.enabled, onCheckedChange = onEnabledChange)
         }
 
         OutlinedButton(onClick = { showTimePicker = true }, modifier = Modifier.fillMaxWidth()) {
@@ -135,6 +203,29 @@ fun AlarmScreen(
 }
 
 @Composable
+private fun ScheduleStatus(schedule: SyncResult) {
+    val text = when (schedule) {
+        is SyncResult.Scheduled -> stringResource(R.string.schedule_next, schedule.at.format(NEXT_ALARM_FORMAT))
+        SyncResult.Disabled -> stringResource(R.string.schedule_off)
+        SyncResult.MissingPermission -> stringResource(R.string.schedule_missing_permission)
+    }
+    Text(text, style = MaterialTheme.typography.bodyMedium)
+}
+
+@Composable
+private fun PermissionCard(text: String, onAllow: () -> Unit) {
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+    ) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            TextButton(onClick = onAllow) { Text(stringResource(R.string.permission_grant)) }
+        }
+    }
+}
+
+@Composable
 private fun MinutesStepper(label: String, minutes: Long, onChange: (Long) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
@@ -171,12 +262,21 @@ private fun ArrivalTimeDialog(initial: LocalTime, onConfirm: (LocalTime) -> Unit
 private fun AlarmScreenPreview() {
     SmartclockTheme {
         AlarmScreen(
-            state = AlarmUiState(isLoading = false, hasUnsavedChanges = true),
+            state = AlarmUiState(
+                isLoading = false,
+                settings = AlarmSettings.DEFAULT.copy(enabled = true),
+                hasUnsavedChanges = true,
+            ),
+            permissions = AlarmPermissions(exactAlarm = false, notifications = true, fullScreen = true),
             onArrivalChange = {},
             onPreparationChange = {},
             onUsualTravelChange = {},
             onDestinationChange = {},
+            onEnabledChange = {},
             onSave = {},
+            onAllowExactAlarm = {},
+            onAllowNotifications = {},
+            onAllowFullScreen = {},
         )
     }
 }

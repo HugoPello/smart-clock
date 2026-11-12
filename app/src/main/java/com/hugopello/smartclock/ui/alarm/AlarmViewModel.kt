@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hugopello.smartclock.SmartClockApp
+import com.hugopello.smartclock.alarm.AlarmSync
+import com.hugopello.smartclock.alarm.SyncResult
 import com.hugopello.smartclock.data.AlarmRepository
 import com.hugopello.smartclock.domain.AlarmSettings
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,12 +22,17 @@ data class AlarmUiState(
     val isLoading: Boolean = true,
     val settings: AlarmSettings = AlarmSettings.DEFAULT,
     val hasUnsavedChanges: Boolean = false,
+    /** What is actually registered with the system (from the last [AlarmSync.sync]); `null` until known. */
+    val schedule: SyncResult? = null,
 ) {
     val wakeUpTime: LocalTime get() = settings.originalAlarm
     val canSave: Boolean get() = !isLoading && hasUnsavedChanges && settings.destination.isNotBlank()
 }
 
-class AlarmViewModel(private val repository: AlarmRepository) : ViewModel() {
+class AlarmViewModel(
+    private val repository: AlarmRepository,
+    private val alarmSync: AlarmSync,
+) : ViewModel() {
 
     // Private mutable state, public read-only view: only the ViewModel can change it.
     private val _uiState = MutableStateFlow(AlarmUiState())
@@ -50,12 +57,26 @@ class AlarmViewModel(private val repository: AlarmRepository) : ViewModel() {
 
     fun onDestinationChange(text: String) = edit { it.copy(destination = text) }
 
+    fun onEnabledChange(enabled: Boolean) = edit { it.copy(enabled = enabled) }
+
     fun save() {
         val state = _uiState.value
         if (!state.canSave) return
         viewModelScope.launch {
             repository.save(state.settings.copy(destination = state.settings.destination.trim()))
-            _uiState.update { it.copy(hasUnsavedChanges = false) }
+            val schedule = alarmSync.sync()
+            _uiState.update { it.copy(hasUnsavedChanges = false, schedule = schedule) }
+        }
+    }
+
+    /**
+     * Called when the screen comes back to the foreground: the user may have just granted
+     * the exact-alarm permission in Settings, so try to schedule again.
+     */
+    fun refreshSchedule() {
+        viewModelScope.launch {
+            val schedule = alarmSync.sync()
+            _uiState.update { it.copy(schedule = schedule) }
         }
     }
 
@@ -70,7 +91,7 @@ class AlarmViewModel(private val repository: AlarmRepository) : ViewModel() {
         val Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as SmartClockApp
-                AlarmViewModel(app.alarmRepository)
+                AlarmViewModel(app.alarmRepository, app.alarmSync)
             }
         }
     }
