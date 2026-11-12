@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">smart-clock</string>
+    <string name="app_name">Smart Clock</string>
+    <string name="alarm_rings_at">Alarm rings at</string>
+    <string name="arrival_at">Arrive at %1$s</string>
+    <string name="preparation">Getting ready</string>
+    <string name="usual_travel">Usual trip</string>
+    <string name="minutes">%1$d min</string>
+    <string name="destination">Destination</string>
+    <string name="save">Save</string>
+    <string name="saved">Saved</string>
 </resources>
