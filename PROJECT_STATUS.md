@@ -20,12 +20,15 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
 - [x] Anti-oscillation threshold (3 min, works across midnight)
 - [x] Fallback when there is no traffic data (keeps original or current alarm)
 - [x] Unit tests for all edge cases (14, passing locally; lint clean)
-- [ ] PR merged
+- [x] CI green and PR merged (#3)
 
 ## Phase 2 — Persistence + UI
-- [ ] Room entity/DAO for one alarm (arrival, preparation, destination)
-- [ ] ViewModel exposing UI state (StateFlow)
-- [ ] Compose screen to edit and show the alarm
+- [x] Room entity/DAO for one alarm (arrival, preparation, usual travel, destination)
+- [x] Repository interface + manual DI (`SmartClockApp`)
+- [x] ViewModel exposing UI state (StateFlow)
+- [x] Compose screen to edit and show the alarm
+- [x] Unit tests: ViewModel (fake repository) + entity mapper (22 total, passing locally; lint clean)
+- [x] Verified on emulator (Pixel_10a): edit, rotate, save, force-stop and reopen keeps saved values; unsaved changes are discarded (reported by author)
 - [ ] PR merged
 
 ## Phase 3 — Real alarm
