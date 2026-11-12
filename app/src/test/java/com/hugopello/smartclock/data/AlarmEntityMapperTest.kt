@@ -15,6 +15,7 @@ class AlarmEntityMapperTest {
             preparation = Duration.ofMinutes(50),
             usualTravel = Duration.ofMinutes(35),
             destination = "Office",
+            enabled = true,
         )
 
         assertEquals(settings, settings.toEntity().toDomain())
