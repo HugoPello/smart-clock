@@ -1,6 +1,7 @@
 package com.hugopello.smartclock.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -11,8 +12,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * exportSchema = true: Room writes each version's schema as JSON to `app/schemas/` (committed).
  * Those files are the history needed to write and test future migrations.
  * Version 1 was never exported, so 1 → 2 is a hand-written migration.
+ * 2 → 3 (new `origin` column with a default + new table) is simple enough for an [AutoMigration]:
+ * Room compares 2.json with 3.json and generates the SQL at compile time.
  */
-@Database(entities = [AlarmEntity::class], version = 2, exportSchema = true)
+@Database(
+    entities = [AlarmEntity::class, TrafficAdjustmentEntity::class],
+    version = 3,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 2, to = 3)],
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 

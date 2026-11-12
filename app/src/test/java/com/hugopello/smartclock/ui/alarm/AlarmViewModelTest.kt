@@ -25,6 +25,7 @@ class AlarmViewModelTest {
         preparation = Duration.ofMinutes(45),
         usualTravel = Duration.ofMinutes(20),
         destination = "Office",
+        origin = "Home",
     )
 
     private val scheduler = FakeAlarmScheduler()
@@ -74,10 +75,12 @@ class AlarmViewModelTest {
         val repo = FakeAlarmRepository()
         val vm = viewModel(repo)
 
+        vm.onOriginChange("  Home  ")
         vm.onDestinationChange("  Office  ")
         vm.onArrivalChange(LocalTime.of(10, 0))
         vm.save()
 
+        assertEquals("Home", repo.stored?.origin)
         assertEquals("Office", repo.stored?.destination)
         assertEquals(LocalTime.of(10, 0), repo.stored?.arrival)
         assertFalse(vm.uiState.value.hasUnsavedChanges)
@@ -104,7 +107,7 @@ class AlarmViewModelTest {
         vm.save()
 
         assertEquals(true, repo.stored?.enabled)
-        assertEquals(LocalTime.of(7, 25), scheduler.scheduledAt?.toLocalTime())
+        assertEquals(LocalTime.of(7, 25), scheduler.ringAt?.toLocalTime())
         assertTrue(vm.uiState.value.schedule is SyncResult.Scheduled)
     }
 
@@ -117,7 +120,7 @@ class AlarmViewModelTest {
         vm.onEnabledChange(false)
         vm.save()
 
-        assertNull(scheduler.scheduledAt)
+        assertNull(scheduler.ringAt)
         assertEquals(SyncResult.Disabled, vm.uiState.value.schedule)
     }
 
@@ -129,5 +132,17 @@ class AlarmViewModelTest {
         vm.refreshSchedule()
 
         assertEquals(SyncResult.MissingPermission, vm.uiState.value.schedule)
+    }
+
+    @Test
+    fun `cannot save without starting point`() {
+        val repo = FakeAlarmRepository()
+        val vm = viewModel(repo)
+
+        vm.onDestinationChange("Office")
+        vm.save()
+
+        assertFalse(vm.uiState.value.canSave)
+        assertNull(repo.stored)
     }
 }

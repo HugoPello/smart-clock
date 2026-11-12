@@ -45,7 +45,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hugopello.smartclock.R
 import com.hugopello.smartclock.alarm.SyncResult
 import com.hugopello.smartclock.domain.AlarmSettings
+import com.hugopello.smartclock.domain.TrafficAdjustment
 import com.hugopello.smartclock.ui.theme.SmartclockTheme
+import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -82,6 +84,7 @@ fun AlarmRoute(
         onArrivalChange = viewModel::onArrivalChange,
         onPreparationChange = viewModel::onPreparationChange,
         onUsualTravelChange = viewModel::onUsualTravelChange,
+        onOriginChange = viewModel::onOriginChange,
         onDestinationChange = viewModel::onDestinationChange,
         onEnabledChange = viewModel::onEnabledChange,
         onSave = viewModel::save,
@@ -107,6 +110,7 @@ fun AlarmScreen(
     onArrivalChange: (LocalTime) -> Unit,
     onPreparationChange: (Long) -> Unit,
     onUsualTravelChange: (Long) -> Unit,
+    onOriginChange: (String) -> Unit,
     onDestinationChange: (String) -> Unit,
     onEnabledChange: (Boolean) -> Unit,
     onSave: () -> Unit,
@@ -137,6 +141,7 @@ fun AlarmScreen(
                 Text(stringResource(R.string.alarm_rings_at), style = MaterialTheme.typography.titleMedium)
                 Text(state.wakeUpTime.format(TIME_FORMAT), style = MaterialTheme.typography.displayLarge)
                 state.schedule?.let { ScheduleStatus(it) }
+                state.appliedTraffic?.let { TrafficStatus(it, state.settings.usualTravel) }
             }
         }
 
@@ -178,6 +183,13 @@ fun AlarmScreen(
         )
 
         OutlinedTextField(
+            value = settings.origin,
+            onValueChange = onOriginChange,
+            label = { Text(stringResource(R.string.origin)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
             value = settings.destination,
             onValueChange = onDestinationChange,
             label = { Text(stringResource(R.string.destination)) },
@@ -210,6 +222,26 @@ private fun ScheduleStatus(schedule: SyncResult) {
         SyncResult.MissingPermission -> stringResource(R.string.schedule_missing_permission)
     }
     Text(text, style = MaterialTheme.typography.bodyMedium)
+    val checkAt = (schedule as? SyncResult.Scheduled)?.trafficCheckAt
+    if (checkAt != null) {
+        Text(
+            stringResource(R.string.traffic_check_at, checkAt.format(TIME_FORMAT)),
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun TrafficStatus(adjustment: TrafficAdjustment, usualTravel: Duration) {
+    val travel = adjustment.todayTravel
+    val shift = adjustment.shift.toMinutes()
+    val text = when {
+        travel == null -> stringResource(R.string.traffic_unavailable)
+        shift < 0 -> stringResource(R.string.traffic_earlier, travel.toMinutes(), usualTravel.toMinutes(), -shift)
+        shift > 0 -> stringResource(R.string.traffic_later, travel.toMinutes(), usualTravel.toMinutes(), shift)
+        else -> stringResource(R.string.traffic_same, travel.toMinutes(), usualTravel.toMinutes())
+    }
+    Text(text, style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable
@@ -271,6 +303,7 @@ private fun AlarmScreenPreview() {
             onArrivalChange = {},
             onPreparationChange = {},
             onUsualTravelChange = {},
+            onOriginChange = {},
             onDestinationChange = {},
             onEnabledChange = {},
             onSave = {},

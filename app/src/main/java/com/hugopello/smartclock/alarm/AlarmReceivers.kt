@@ -6,10 +6,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.hugopello.smartclock.SmartClockApp
+import com.hugopello.smartclock.traffic.TrafficCheckWorker
 import kotlinx.coroutines.launch
 
 /**
- * Receives the [AlarmManager] alarm (ring) and the "Dismiss" button of the notification.
+ * Receives the [AlarmManager] alarms (ring, traffic check) and the "Dismiss" button of the notification.
  * Not exported: only our own PendingIntents can reach it.
  */
 class AlarmReceiver : BroadcastReceiver() {
@@ -22,12 +23,15 @@ class AlarmReceiver : BroadcastReceiver() {
                 runAsync(app) { app.alarmSync.sync(justRang = true) }
             }
             ACTION_DISMISS -> app.alarmNotifier.dismiss()
+            // Hand over to WorkManager: network constraint + retries. Enqueuing is instant, no goAsync needed.
+            ACTION_CHECK_TRAFFIC -> TrafficCheckWorker.enqueue(context)
         }
     }
 
     companion object {
         const val ACTION_RING = "com.hugopello.smartclock.action.RING"
         const val ACTION_DISMISS = "com.hugopello.smartclock.action.DISMISS"
+        const val ACTION_CHECK_TRAFFIC = "com.hugopello.smartclock.action.CHECK_TRAFFIC"
     }
 }
 

@@ -3,7 +3,7 @@
 Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pass, lint is clean and its PR is merged.
 
 ## Phase 0 — Setup
-- [x] `CLAUDE.md` with project rules
+- [x] `CLAUDE.md` with project rules (local only since phase 4, gitignored)
 - [x] `PROJECT_STATUS.md` (this file)
 - [x] `.gitignore` (secrets, build output, personal notes)
 - [x] Gradle skeleton (Kotlin DSL, version catalog, Compose "hello" screen) — build, tests and lint pass locally
@@ -44,14 +44,21 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
   - rang on time with the screen off: ringing screen shown, alarm-usage audio playing; Dismiss removed the notification and stopped the sound
   - next day's alarm scheduled right after ringing; still scheduled after a reboot without opening the app
 - [ ] Not verified yet: secure lock screen (PIN), time zone change, Dismiss from the notification, heads-up while the phone is in use
-- [ ] CI green and PR merged
+- [x] CI green and PR merged (#5)
 
 ## Phase 4 — Traffic
-- [ ] API key in `local.properties` → `BuildConfig`
-- [ ] Routes API client (`TRAFFIC_AWARE`)
-- [ ] Exact alarm before ring → worker → recalculate → reschedule
-- [ ] Network failure keeps original time
-- [ ] PR merged
+- [x] API key in `local.properties` → `BuildConfig` (empty on CI → no traffic data, build still works)
+- [x] Routes API client (Retrofit + OkHttp + kotlinx.serialization, `TRAFFIC_AWARE`, field mask, Android app identity headers)
+- [x] Exact alarm 45 min before the original ring → WorkManager worker → `calculateAlarm` → reschedule
+- [x] Network/API failure keeps original time (retries temporary errors, then stores `NO_TRAFFIC_DATA`)
+- [x] Starting point field + traffic adjustment table: Room v2 → v3 with `@AutoMigration`
+- [x] Unit tests: `planAlarm`, `TrafficCheck`, Routes client with MockWebServer (61 total, passing locally; lint clean)
+- [x] Verified on emulator (Pixel_10a, API 37), checked by Claude via adb:
+  - phase 3 data survived the v2 → v3 auto-migration
+  - without an API key: the check ran, stored "no traffic data", alarm kept its original time, UI shows it
+  - check alarm fired on time with the screen off in light Doze and the worker ran
+- [ ] Not verified yet: a real Routes API call (needs the author's API key), deep Doze (the emulator won't enter it with an alarm clock less than 1 h away)
+- [ ] CI green and PR merged
 
 ## Phase 5 — Polish
 - [ ] Screenshot/GIF at the top of the README
