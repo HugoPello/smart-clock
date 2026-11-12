@@ -33,7 +33,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "ROUTES_API_KEY", "\"${localProperties.getProperty("ROUTES_API_KEY", "")}\"")
+        buildConfigField("String", "TOMTOM_API_KEY", "\"${localProperties.getProperty("TOMTOM_API_KEY", "")}\"")
     }
 
     buildTypes {

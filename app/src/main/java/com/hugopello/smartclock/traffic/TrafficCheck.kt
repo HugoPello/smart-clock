@@ -44,7 +44,7 @@ class TrafficCheck(
         if (now.isBefore(checkAt - EARLY_TOLERANCE)) return CheckOutcome.SKIPPED
 
         // Ask for traffic at the moment the user would normally leave: wake up + preparation.
-        // A departure time in the future gives Google's *predicted* traffic for that moment.
+        // A departure time in the future gives *predicted* traffic for that moment.
         val departure = maxOf(plan.occurrence + settings.preparation, now.plusMinutes(1))
         val result = traffic.travelTime(settings.origin, settings.destination, departure.toInstant())
         if (result is TrafficResult.Unavailable && result.retry && !isLastAttempt) return CheckOutcome.RETRY

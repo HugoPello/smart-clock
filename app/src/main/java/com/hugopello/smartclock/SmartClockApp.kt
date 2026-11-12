@@ -7,9 +7,8 @@ import com.hugopello.smartclock.alarm.AndroidAlarmScheduler
 import com.hugopello.smartclock.data.AlarmRepository
 import com.hugopello.smartclock.data.AppDatabase
 import com.hugopello.smartclock.data.RoomAlarmRepository
-import com.hugopello.smartclock.traffic.AppIdentityInterceptor
-import com.hugopello.smartclock.traffic.GoogleRoutesTrafficSource
-import com.hugopello.smartclock.traffic.RoutesApi
+import com.hugopello.smartclock.traffic.TomTomApi
+import com.hugopello.smartclock.traffic.TomTomTrafficSource
 import com.hugopello.smartclock.traffic.TrafficCheck
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,8 +30,7 @@ class SmartClockApp : Application() {
     val alarmNotifier by lazy { AlarmNotifier(this) }
     val alarmSync by lazy { AlarmSync(alarmRepository, AndroidAlarmScheduler(this)) }
     val trafficCheck by lazy {
-        val api = RoutesApi.create(interceptors = arrayOf(AppIdentityInterceptor(this)))
-        TrafficCheck(alarmRepository, GoogleRoutesTrafficSource(api, BuildConfig.ROUTES_API_KEY), alarmSync)
+        TrafficCheck(alarmRepository, TomTomTrafficSource(TomTomApi.create(), BuildConfig.TOMTOM_API_KEY), alarmSync)
     }
 
     override fun onCreate() {
