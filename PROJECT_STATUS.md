@@ -28,7 +28,7 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
 - [x] ViewModel exposing UI state (StateFlow)
 - [x] Compose screen to edit and show the alarm
 - [x] Unit tests: ViewModel (fake repository) + entity mapper (22 total, passing locally; lint clean)
-- [ ] Verified on a device/emulator (emulator needs hypervisor driver installed)
+- [x] Verified on emulator (Pixel_10a): edit, rotate, save, force-stop and reopen keeps saved values; unsaved changes are discarded (reported by author)
 - [ ] PR merged
 
 ## Phase 3 — Real alarm
