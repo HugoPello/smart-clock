@@ -10,16 +10,16 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
 - [x] Lint strict (`warningsAsErrors`) and clean: 0 issues
 - [x] Dependabot for Gradle and GitHub Actions
 - [x] GitHub Actions CI workflow written (build + unit tests + lint)
-- [ ] CI green on the PR
-- [ ] README with badges (screenshot/GIF comes in phase 5)
-- [ ] PR merged
+- [x] CI green on the PR (reported by author)
+- [x] README with badges (screenshot/GIF comes in phase 5)
+- [x] PR merged (#1)
 
 ## Phase 1 — Pure calculation
-- [ ] `AlarmCalculator`: alarm = arrival − preparation − travel time
-- [ ] Shift limits (−30 / +15 min) and user window
-- [ ] Anti-oscillation threshold
-- [ ] Fallback to original time when there is no traffic data
-- [ ] Unit tests for all edge cases
+- [x] `calculateAlarm`: alarm = arrival − preparation − travel time
+- [x] Shift limits (−30 / +15 min), configurable by the user (`AlarmLimits`)
+- [x] Anti-oscillation threshold (3 min, works across midnight)
+- [x] Fallback when there is no traffic data (keeps original or current alarm)
+- [x] Unit tests for all edge cases (14, passing locally; lint clean)
 - [ ] PR merged
 
 ## Phase 2 — Persistence + UI
