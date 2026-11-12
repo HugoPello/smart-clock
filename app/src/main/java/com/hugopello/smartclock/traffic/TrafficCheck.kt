@@ -44,12 +44,14 @@ class TrafficCheck(
         if (now.isBefore(checkAt - EARLY_TOLERANCE)) return CheckOutcome.SKIPPED
 
         // Ask for traffic at the moment the user would normally leave: wake up + preparation.
-        // A departure time in the future gives Google's *predicted* traffic for that moment.
+        // A departure time in the future gives *predicted* traffic for that moment.
         val departure = maxOf(plan.occurrence + settings.preparation, now.plusMinutes(1))
         val result = traffic.travelTime(settings.origin, settings.destination, departure.toInstant())
         if (result is TrafficResult.Unavailable && result.retry && !isLastAttempt) return CheckOutcome.RETRY
 
-        val todayTravel = (result as? TrafficResult.Success)?.travelTime
+        // APIs answer in seconds (14 min 55 s). Round *up* to whole minutes: the alarm lands on an exact
+        // minute, and if anything it rings a few seconds early rather than late.
+        val todayTravel = (result as? TrafficResult.Success)?.travelTime?.let(::ceilToMinutes)
         val decision = calculateAlarm(
             AlarmInput(settings.arrival, settings.preparation, settings.usualTravel, todayTravel),
             limits,
@@ -71,6 +73,11 @@ class TrafficCheck(
         val EARLY_TOLERANCE: Duration = Duration.ofMinutes(1)
         val HALF_DAY: Duration = Duration.ofHours(12)
         val DAY: Duration = Duration.ofDays(1)
+
+        fun ceilToMinutes(d: Duration): Duration {
+            val minutes = d.toMinutes()
+            return Duration.ofMinutes(if (Duration.ofMinutes(minutes) < d) minutes + 1 else minutes)
+        }
 
         /** 06:50 → 23:55 across midnight is −55 min, not +17h05. */
         fun signedShift(raw: Duration): Duration = when {

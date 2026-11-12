@@ -3,7 +3,7 @@ package com.hugopello.smartclock.traffic
 import java.time.Duration
 import java.time.Instant
 
-/** Where today's travel time comes from. The app uses Google Routes; tests use a fake. */
+/** Where today's travel time comes from. The app uses TomTom; tests use a fake. */
 interface TrafficSource {
     suspend fun travelTime(origin: String, destination: String, departure: Instant): TrafficResult
 }

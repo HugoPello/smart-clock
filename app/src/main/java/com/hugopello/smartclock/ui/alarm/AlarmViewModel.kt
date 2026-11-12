@@ -32,9 +32,14 @@ data class AlarmUiState(
     val canSave: Boolean
         get() = !isLoading && hasUnsavedChanges && settings.origin.isNotBlank() && settings.destination.isNotBlank()
 
-    /** The traffic result that moved the next alarm; `null` if the next alarm hasn't been checked yet. */
+    /**
+     * The traffic result that moved the next alarm; `null` if the next alarm hasn't been checked yet,
+     * or while editing (it was computed for the saved settings, not the ones on screen).
+     */
     val appliedTraffic: TrafficAdjustment?
-        get() = adjustment.takeIf { schedule is SyncResult.Scheduled && schedule.trafficCheckAt == null }
+        get() = adjustment.takeIf {
+            !hasUnsavedChanges && schedule is SyncResult.Scheduled && schedule.trafficCheckAt == null
+        }
 }
 
 class AlarmViewModel(

@@ -6,6 +6,8 @@ import com.hugopello.smartclock.MainDispatcherRule
 import com.hugopello.smartclock.alarm.AlarmSync
 import com.hugopello.smartclock.alarm.SyncResult
 import com.hugopello.smartclock.domain.AlarmSettings
+import com.hugopello.smartclock.domain.DecisionReason
+import com.hugopello.smartclock.domain.TrafficAdjustment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -13,7 +15,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZonedDateTime
 
 class AlarmViewModelTest {
 
@@ -122,6 +127,25 @@ class AlarmViewModelTest {
 
         assertNull(scheduler.ringAt)
         assertEquals(SyncResult.Disabled, vm.uiState.value.schedule)
+    }
+
+    @Test
+    fun `traffic result is hidden while editing`() {
+        val adjustment = TrafficAdjustment(
+            LocalDate.now(),
+            Duration.ofMinutes(-10),
+            Duration.ofMinutes(30),
+            DecisionReason.ADJUSTED,
+            Instant.EPOCH,
+        )
+        val state = AlarmUiState(
+            isLoading = false,
+            schedule = SyncResult.Scheduled(ZonedDateTime.now(), trafficCheckAt = null),
+            adjustment = adjustment,
+        )
+
+        assertEquals(adjustment, state.appliedTraffic)
+        assertNull(state.copy(hasUnsavedChanges = true).appliedTraffic)
     }
 
     @Test
