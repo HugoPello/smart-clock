@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Secrets and per-machine config (API keys live here, never commit)
+local.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Personal learning notes (local only)
+docs/LEARNING.md
