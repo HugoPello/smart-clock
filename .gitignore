@@ -17,5 +17,6 @@ local.properties
 .DS_Store
 Thumbs.db
 
-# Personal learning notes (local only)
+# Personal learning notes and AI assistant instructions (local only)
 docs/LEARNING.md
+CLAUDE.md
