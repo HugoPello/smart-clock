@@ -31,10 +31,9 @@ One alarm, one fixed destination, one traffic query, calculation + limits. Nothi
 - Never commit keys, never print them in logs.
 
 ## Learning mode
-The author is a DAM student and wants to understand every piece:
-- Explain new concepts briefly before using them, with a link to official docs.
-- Leave small, well-scoped parts (pure logic, tests) for the author to write; review them like a PR.
-- Close each phase with a short explanation + 2-3 interview-style questions.
+The author is a DAM student and wants to understand how the project works:
+- Claude writes the code; no exercises or TODOs left for the author.
+- Close each important phase with a concise explanation of what was built, how it works and why (skip basics).
 - `docs/LEARNING.md` is personal and gitignored — never commit it.
 
 ## Commands
