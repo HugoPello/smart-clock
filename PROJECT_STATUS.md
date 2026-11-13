@@ -72,10 +72,15 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
   - usual trip 15 min: change below threshold, alarm not moved
   - usual trip 5 min: alarm moved 10 min earlier, rescheduled at the exact minute
   - invented destination: "no traffic data" on the first attempt, original time kept
-- [ ] CI green and PR merged
+- [x] CI green and PR merged (#7)
 
 ## Phase 5 — Polish
-- [ ] Screenshot/GIF at the top of the README
-- [ ] Repo topics
-- [ ] Final cleanup
-- [ ] PR merged
+- [x] README rewritten (UTF-16 → UTF-8, TomTom instead of Google, how it works, architecture, tests, limitations)
+- [x] Screenshots + GIF at the top of the README: real app states with real Madrid traffic (demo-mode status bar)
+- [x] Big clock shows the time that will actually ring; the line below explains the usual time and the traffic shift
+- [x] Final cleanup: template backup rules replaced by an explicit, documented choice; no leftover TODOs or debug logs
+- [x] Release build (R8) verified on the emulator, signed locally with the debug key: Room and a real TomTom call work
+- [x] Time zone change verified: `TIMEZONE_CHANGED` rescheduled the alarm without opening the app
+- [x] Unit tests: 65 total, passing locally; lint clean
+- [ ] Repo topics (set by the author on GitHub)
+- [ ] CI green and PR merged

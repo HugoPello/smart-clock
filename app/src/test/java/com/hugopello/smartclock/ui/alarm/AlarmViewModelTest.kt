@@ -18,6 +18,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class AlarmViewModelTest {
@@ -146,6 +147,20 @@ class AlarmViewModelTest {
 
         assertEquals(adjustment, state.appliedTraffic)
         assertNull(state.copy(hasUnsavedChanges = true).appliedTraffic)
+    }
+
+    @Test
+    fun `big clock shows the scheduled ring, or the live preview while editing`() {
+        // Usual alarm 07:25 (saved settings); traffic moved the scheduled ring to 07:18.
+        val state = AlarmUiState(
+            isLoading = false,
+            settings = saved,
+            schedule = SyncResult.Scheduled(ZonedDateTime.of(2026, 11, 13, 7, 18, 0, 0, ZoneId.of("UTC")), null),
+        )
+
+        assertEquals(LocalTime.of(7, 18), state.displayTime)
+        assertEquals(LocalTime.of(7, 25), state.copy(hasUnsavedChanges = true).displayTime)
+        assertEquals(LocalTime.of(7, 25), state.copy(schedule = SyncResult.Disabled).displayTime)
     }
 
     @Test
