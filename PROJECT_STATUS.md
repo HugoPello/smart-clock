@@ -82,5 +82,5 @@ Legend: `[x]` done and verified · `[ ]` pending. A phase is done when tests pas
 - [x] Release build (R8) verified on the emulator, signed locally with the debug key: Room and a real TomTom call work
 - [x] Time zone change verified: `TIMEZONE_CHANGED` rescheduled the alarm without opening the app
 - [x] Unit tests: 65 total, passing locally; lint clean
-- [ ] Repo topics (set by the author on GitHub)
-- [ ] CI green and PR merged
+- [x] Repo topics (set by the author on GitHub)
+- [x] CI green and PR merged
