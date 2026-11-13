@@ -28,7 +28,15 @@ data class AlarmUiState(
     /** Last traffic check result stored in the database. */
     val adjustment: TrafficAdjustment? = null,
 ) {
+    /** The usual alarm time, from the settings on screen (no traffic). Updates live while editing. */
     val wakeUpTime: LocalTime get() = settings.originalAlarm
+
+    /**
+     * The big clock: the time that will actually ring (traffic included) once saved and scheduled;
+     * the live [wakeUpTime] while editing or when nothing is scheduled.
+     */
+    val displayTime: LocalTime
+        get() = (schedule as? SyncResult.Scheduled)?.takeIf { !hasUnsavedChanges }?.at?.toLocalTime() ?: wakeUpTime
     val canSave: Boolean
         get() = !isLoading && hasUnsavedChanges && settings.origin.isNotBlank() && settings.destination.isNotBlank()
 

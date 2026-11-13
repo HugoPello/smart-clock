@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -145,9 +146,9 @@ fun AlarmScreen(
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.alarm_rings_at), style = MaterialTheme.typography.titleMedium)
-                Text(state.wakeUpTime.format(TIME_FORMAT), style = MaterialTheme.typography.displayLarge)
+                Text(state.displayTime.format(TIME_FORMAT), style = MaterialTheme.typography.displayLarge)
                 state.schedule?.let { ScheduleStatus(it) }
-                state.appliedTraffic?.let { TrafficStatus(it, state.settings.usualTravel) }
+                state.appliedTraffic?.let { TrafficStatus(it, state.settings.usualTravel, state.wakeUpTime) }
             }
         }
 
@@ -238,16 +239,17 @@ private fun ScheduleStatus(schedule: SyncResult) {
 }
 
 @Composable
-private fun TrafficStatus(adjustment: TrafficAdjustment, usualTravel: Duration) {
+private fun TrafficStatus(adjustment: TrafficAdjustment, usualTravel: Duration, usualAlarm: LocalTime) {
     val travel = adjustment.todayTravel
     val shift = adjustment.shift.toMinutes()
+    val usual = usualAlarm.format(TIME_FORMAT)
     val text = when {
         travel == null -> stringResource(R.string.traffic_unavailable)
-        shift < 0 -> stringResource(R.string.traffic_earlier, travel.toMinutes(), usualTravel.toMinutes(), -shift)
-        shift > 0 -> stringResource(R.string.traffic_later, travel.toMinutes(), usualTravel.toMinutes(), shift)
+        shift < 0 -> stringResource(R.string.traffic_earlier, travel.toMinutes(), usualTravel.toMinutes(), -shift, usual)
+        shift > 0 -> stringResource(R.string.traffic_later, travel.toMinutes(), usualTravel.toMinutes(), shift, usual)
         else -> stringResource(R.string.traffic_same, travel.toMinutes(), usualTravel.toMinutes())
     }
-    Text(text, style = MaterialTheme.typography.bodySmall)
+    Text(text, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
 }
 
 @Composable

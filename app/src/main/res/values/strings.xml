@@ -14,8 +14,8 @@
     <string name="schedule_next">Next alarm: %1$s</string>
     <string name="schedule_off">Alarm is off</string>
     <string name="traffic_check_at">Traffic check at %1$s</string>
-    <string name="traffic_earlier">Traffic: %1$d min (usual %2$d). Alarm moved %3$d min earlier.</string>
-    <string name="traffic_later">Traffic: %1$d min (usual %2$d). Alarm moved %3$d min later.</string>
+    <string name="traffic_earlier">Usually %4$s. Traffic: %1$d min (usual %2$d), %3$d min earlier.</string>
+    <string name="traffic_later">Usually %4$s. Traffic: %1$d min (usual %2$d), %3$d min later.</string>
     <string name="traffic_same">Traffic: %1$d min (usual %2$d). No change.</string>
     <string name="traffic_unavailable">Traffic unavailable: usual time kept.</string>
     <string name="schedule_missing_permission">Not scheduled: exact alarms are not allowed</string>
